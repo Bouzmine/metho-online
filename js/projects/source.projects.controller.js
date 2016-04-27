@@ -79,7 +79,9 @@ angular.module("metho.controller.projects.source", [])
 
     $scope.solveWarning = function(id) {
         $translate(["PROJECT.SOURCE.CONFIRM", "PROJECT.SOURCE.CANCEL"]).then(function (translations) {
-            cordova.plugins.Keyboard.disableScroll(false);
+            if (!!window.cordova) {
+                cordova.plugins.Keyboard.disableScroll(false);
+            }
             $ionicPopup.prompt({
                 title: $scope.source.warnings[id].promptTitle,
                 subTitle: $scope.source.warnings[id].promptText,
@@ -105,7 +107,9 @@ angular.module("metho.controller.projects.source", [])
     }
 
     $scope.edit = function() {
-        cordova.plugins.Keyboard.disableScroll(true);
+        if (!!window.cordova) {
+            cordova.plugins.Keyboard.disableScroll(false);
+        }
         $scope.newsource = JSON.parse(JSON.stringify($scope.source));
         if ($scope.newsource.consultationDate != null && $scope.newsource.consultationDate != "") {
             $scope.newsource.consultationDate = new Date($scope.newsource.consultationDate);
