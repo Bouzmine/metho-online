@@ -1,6 +1,6 @@
 angular.module("metho.controller.settings.tab", [])
 
-.controller('SettingsCtrl', function($scope, $rootScope, $translate, $ionicConfig, $ionicPopup, localStorageService, Settings, ParseSource) {
+.controller('SettingsCtrl', function($scope, $rootScope, $translate, $ionicConfig, $ionicPopup, localStorageService, Settings, ParseSource, Storage) {
     // Get settings from service
     $scope.settings = Settings.all();
     $scope.name = {
@@ -51,13 +51,7 @@ angular.module("metho.controller.settings.tab", [])
     });
 
     $rootScope.$on("$translateChangeSuccess", function () {
-        $scope.sourceRepo = new PouchDB("sources");
-        // Reparse every source
-        $scope.sourceRepo.allDocs({include_docs:true}).then(function (docs) {
-            for (var i = 0; i < docs.rows.length; i++) {
-                $scope.sourceRepo.put(ParseSource.parseSource(docs.rows[i].doc));
-            }
-        });
+        Storage.parseSources();
     });
 
     $scope.changeLanguage = function () {
@@ -78,4 +72,40 @@ angular.module("metho.controller.settings.tab", [])
             numeral.language($scope.settings.overideLang);
         }
     }
+
+    $scope.$watch("settings.advanced", function () {
+        if (!!window.cordova) {
+            ThreeDeeTouch.isAvailable(function (avail) {
+                if (avail) {
+                    $translate(["3D_TOUCH.NEW_SOURCE", "3D_TOUCH.NEW_SOURCE_DESC", "3D_TOUCH.SCAN", "3D_TOUCH.SCAN_DESC"]).then(function (translations) {
+                        if ($scope.settings.advanced) {
+                            ThreeDeeTouch.configureQuickActions([
+                                {
+                                    type: 'newsource',
+                                    title: translations["3D_TOUCH.NEW_SOURCE"],
+                                    subtitle: translations["3D_TOUCH.NEW_SOURCE_DESC"],
+                                    iconType: "Add"
+                                },
+                                {
+                                    type: 'scan',
+                                    title: translations["3D_TOUCH.SCAN"],
+                                    subtitle: translations["3D_TOUCH.SCAN_DESC"],
+                                    iconType: "CapturePhoto"
+                                }
+                            ]);
+                        }else {
+                            ThreeDeeTouch.configureQuickActions([
+                                {
+                                    type: 'newsource',
+                                    title: translations["3D_TOUCH.NEW_SOURCE"],
+                                    subtitle: translations["3D_TOUCH.NEW_SOURCE_DESC"],
+                                    iconType: "Add"
+                                }
+                            ]);
+                        }
+                    });
+                }
+            });
+        }
+    });
 });

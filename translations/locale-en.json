@@ -578,5 +578,11 @@
                 "FEATURE_TITLE": "Feature request"
             }
         }
+    },
+    "3D_TOUCH": {
+        "NEW_SOURCE": "New source",
+        "NEW_SOURCE_DESC": "Create a new source",
+        "SCAN": "Scanning",
+        "SCAN_DESC": "Scan a barcode"
     }
 }

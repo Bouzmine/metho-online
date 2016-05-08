@@ -3,7 +3,6 @@
 
 node_modules/
 platforms/ios/www/*
-platforms/ios/Metho.xcodeproj
 .DS_Store
 .bowerrc
 .editorconfig
