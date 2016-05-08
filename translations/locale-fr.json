@@ -578,5 +578,11 @@
                 "FEATURE_TITLE": "Suggestion de fonctionalité"
             }
         }
+    },
+    "3D_TOUCH": {
+        "NEW_SOURCE": "Nouvelle source",
+        "NEW_SOURCE_DESC": "Créer une nouvelle source",
+        "SCAN": "Balayage",
+        "SCAN_DESC": "Balayer un code-barre"
     }
 }

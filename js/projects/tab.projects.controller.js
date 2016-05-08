@@ -1,6 +1,6 @@
 angular.module('metho.controller.projects.tab', [])
 
-.controller('ProjectsCtrl', function($scope, $rootScope, $state, $translate, $ionicModal, $ionicPlatform, $ionicPopup, $ionicListDelegate, ShareProject) {
+.controller('ProjectsCtrl', function($scope, $rootScope, $state, $translate, $ionicModal, $ionicPlatform, $ionicPopup, $ionicListDelegate, ShareProject, Storage) {
     $scope.projects = [];
     $scope.project = {
         name: "",
@@ -10,20 +10,16 @@ angular.module('metho.controller.projects.tab', [])
     $scope.err = "";
     $scope.errorName = false;
     $scope.loading = true;
-    // Initialize the DB
-    $scope.projectsRepo = new PouchDB("projects");
     // Load the projects
     $scope.loadProjects = function () {
         $translate("PROJECT.TAB.UNKNOWN_MATTER").then(function (unknown) {
-            $scope.projectsRepo.allDocs({
-                include_docs: true
-            }).then(function(result) {
+            Storage.getProjects().then(function(result) {
                 $scope.projects = [];
-                for (var i = 0; i < result.rows.length; i++) {
+                for (var i = 0; i < result.length; i++) {
                     var obj = {
-                        name: result.rows[i].doc.name,
-                        matter: result.rows[i].doc.matter,
-                        id: result.rows[i].doc._id
+                        name: result[i].name,
+                        matter: result[i].matter,
+                        id: result[i]._id
                     }
                     if (obj.matter == "") {
                         obj.matter = unknown;
@@ -34,9 +30,13 @@ angular.module('metho.controller.projects.tab', [])
                 $scope.projects.sort(function (a, b) {
                     return a.name.localeCompare(b.name);
                 });
-                $scope.$apply();
-            }).catch(function(err) {
-                console.log(err);
+            }, function (err) {
+
+            }, function (notif) {
+                console.log(notif);
+                if (notif == "loading") {
+                    $scope.loading = true;
+                }
             });
         });
     }
@@ -50,6 +50,8 @@ angular.module('metho.controller.projects.tab', [])
             $scope.loadProjects();
         }
     }, 2000);
+
+    // $scope.loadProjects();
 
     $ionicModal.fromTemplateUrl('templates/new.project.modal.html', {
         scope: $scope,
@@ -107,7 +109,7 @@ angular.module('metho.controller.projects.tab', [])
                     matter: theMatter
                 };
 
-                $scope.projectsRepo.post(creatingProj).then(function(response) {
+                Storage.createProject(creatingProj).then(function (response) {
                     creatingProj.id = response.id;
                     if (creatingProj.matter == "") {
                         creatingProj.matter = unknown;
@@ -121,8 +123,7 @@ angular.module('metho.controller.projects.tab', [])
                     $scope.projects.sort(function (a, b) {
                         return a.name.localeCompare(b.name);
                     });
-                    $scope.$apply();
-                }).catch(function(err) {
+                }).catch(function (err) {
                     console.log(err);
                 });
             });
@@ -140,17 +141,14 @@ angular.module('metho.controller.projects.tab', [])
                 cssClass: 'deleteProject'
             }).then(function(res) {
                 if (res) {
-                    $scope.projectsRepo.get(id).then(function(doc) {
-                        return $scope.projectsRepo.remove(doc);
-                    }).then(function(result) {
+                    Storage.deleteProject(id).then(function (result) {
                         for (var i = 0; i < $scope.projects.length; i++) {
                             if ($scope.projects[i].id == result.id) {
                                 $scope.projects.splice(i, 1);
-                                $scope.$apply();
                                 return;
                             }
                         }
-                    }).catch(function(err) {
+                    }).catch(function (err) {
                         console.log(err);
                     });
                 } else {
@@ -163,9 +161,9 @@ angular.module('metho.controller.projects.tab', [])
     $scope.editProject = function(id) {
         $translate("PROJECT.TAB.UNKNOWN_MATTER").then(function (unknown) {
             $scope.editingProject = {};
-            $scope.projectsRepo.get(id).then(function(doc) {
+            Storage.getProjectFromId(id).then(function(doc) {
                 $scope.editingProject.name = doc.name;
-                $scope.editingProject.matter = doc.matter;
+                $scope.editingProject.matter = unknown_subjects.indexOf(doc.matter) >= 0 ? "" : doc.matter;
                 $scope.editingProject.id = doc._id;
                 $scope.editProjectModal.show();
             });
@@ -184,10 +182,7 @@ angular.module('metho.controller.projects.tab', [])
         } else {
             $translate("PROJECT.TAB.UNKNOWN_MATTER").then(function (unknown) {
                 // make the change in the database
-                $scope.projectsRepo.get($scope.editingProject.id).then(function(doc) {
-                    return $scope.projectsRepo.put($scope.editingProject, $scope.editingProject.id, doc._rev);
-                }).then(function(response) {
-                    // edit the table's entry
+                Storage.setProjectFromId($scope.editingProject.id, $scope.editingProject).then(function (response) {
                     for (var i = 0; i < $scope.projects.length; i++) {
                         if ($scope.projects[i].id == response.id) {
                             $scope.projects[i].name = $scope.editingProject.name;
@@ -196,9 +191,10 @@ angular.module('metho.controller.projects.tab', [])
                             } else {
                                 $scope.projects[i].matter = $scope.editingProject.matter;
                             }
+                            return;
                         }
                     }
-                }).catch(function(err) {
+                }).catch(function (err) {
                     console.log(err);
                 });
                 $scope.editProjectModal.hide();

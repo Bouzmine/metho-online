@@ -35,6 +35,10 @@ angular.module('metho.service.settings', [])
         localStorageService.set("setting-lastLang", "");
     }
 
+    if (localStorageService.get("setting-firstRun") == null) {
+        localStorageService.set("setting-firstRun", true);
+    }
+
     var settings = {
         advanced: localStorageService.get("setting-advanced"),
         askForOrder: localStorageService.get("setting-askForOrder"),
@@ -43,7 +47,8 @@ angular.module('metho.service.settings', [])
         firstName: localStorageService.get("setting-firstName"),
         lastName: localStorageService.get("setting-lastName"),
         overideLang: localStorageService.get("setting-overideLang"),
-        lastLang: localStorageService.get("setting-lastLang")
+        lastLang: localStorageService.get("setting-lastLang"),
+        firstRun: localStorageService.get("setting-firstRun")
     };
 
     return {

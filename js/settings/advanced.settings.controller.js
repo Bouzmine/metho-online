@@ -12,8 +12,31 @@ angular.module("metho.controller.settings.advanced", [])
                 });
             });
         } else {
+            // Restore purchases
             // Buy
-            
+            // Add Quick Actions
+            if (!!window.cordova) {
+                ThreeDeeTouch.isAvailable(function (avail) {
+                    if (avail) {
+                        $translate(["3D_TOUCH.NEW_SOURCE", "3D_TOUCH.NEW_SOURCE_DESC", "3D_TOUCH.SCAN", "3D_TOUCH.SCAN_DESC"]).then(function (translations) {
+                            ThreeDeeTouch.configureQuickActions([
+                                {
+                                    type: 'newsource',
+                                    title: translations["3D_TOUCH.NEW_SOURCE"],
+                                    subtitle: translations["3D_TOUCH.NEW_SOURCE_DESC"],
+                                    iconType: "Add"
+                                },
+                                {
+                                    type: 'scan',
+                                    title: translations["3D_TOUCH.SCAN"],
+                                    subtitle: translations["3D_TOUCH.SCAN_DESC"],
+                                    iconType: "CapturePhoto"
+                                }
+                            ]);
+                        });
+                    }
+                });
+            }
             // Activate
             Settings.set("advanced", true);
             $state.go("tab.settings", {});

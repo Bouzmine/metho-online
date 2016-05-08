@@ -1,7 +1,9 @@
 <ion-view id="bind-html-with-trust">
     <ion-nav-title>
-        <div class="page-title">{{project.name}}</div>
-        <div class="page-sub-title">{{project.matter}}</div>
+        <div class="titles">
+            <div class="page-title">{{project.name}}</div>
+            <div class="page-sub-title">{{project.matter}}</div>
+        </div>
     </ion-nav-title>
     <ion-nav-buttons side="right">
       <button class="button button-clear button-positive icon ion-ios-upload-outline" ng-click="share()" ng-disabled="project.sources.length == 0"></button>

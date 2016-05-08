@@ -1,16 +1,14 @@
 angular.module("metho.controller.projects.pending", [])
 
-.controller("PendingCtrl", function($scope, $state, $http, $translate, $stateParams, $ionicModal, $ionicPopup, $ionicScrollDelegate, $ionicLoading, ParseSource, SharePendings) {
+.controller("PendingCtrl", function($scope, $state, $http, $translate, $stateParams, $ionicModal, $ionicPopup, $ionicScrollDelegate, $ionicLoading, ParseSource, SharePendings, Storage) {
     $scope.project = {
         id: $stateParams.projectID,
         sources: []
     };
     $scope.pendings = SharePendings.getPendings();
-    $scope.pendingRepo = new PouchDB("pendings");
     $scope.newsource = {};
     $scope.editingISBN = null;
     $scope.editingIndex = null;
-    $scope.sourceRepo = new PouchDB("sources");
 
     $ionicModal.fromTemplateUrl('templates/pending.source.modal.html', {
         scope: $scope,
@@ -30,12 +28,11 @@ angular.module("metho.controller.projects.pending", [])
                 SafariViewController.show({
                         url: url
                     },
-                    // this success handler will be invoked for the lifecycle events 'opened', 'loaded' and 'closed'
                     function(result) {
 
                     },
                     function(msg) {
-                        alert("KO: " + msg);
+                        console.log(msg);
                     })
             } else {
                 // potentially powered by InAppBrowser because that (currently) clobbers window.open
@@ -73,17 +70,15 @@ angular.module("metho.controller.projects.pending", [])
             var creatingProj = ParseSource.parseSource($scope.newsource);
             creatingProj.project_id = $stateParams.projectID;
             // Save to db
-            $scope.sourceRepo.post(creatingProj).then(function(response) {
+            Storage.createSource(creatingProj).then(function(response) {
                 creatingProj._id = response.id;
                 creatingProj._rev = response.rev;
                 $scope.project.sources.push(creatingProj);
                 if ($scope.editingId) {
                     $scope.pendings.splice($scope.editingIndex, 1);
-                    $scope.pendingRepo.get($scope.editingId).then(function(doc) {
-                        return $scope.pendingRepo.remove(doc);
-                    }).then(function(result) {
-                        // handle result
-                    }).catch(function(err) {
+                    Storage.deletePending($scope.editingId).then(function (response) {
+
+                    }).catch(function (err) {
                         console.log(err);
                     });
                 }
@@ -96,7 +91,6 @@ angular.module("metho.controller.projects.pending", [])
                     });
                 }
                 $scope.closeModal();
-                $scope.$apply();
             }).catch(function(err) {
                 alert(err);
             });
@@ -111,9 +105,7 @@ angular.module("metho.controller.projects.pending", [])
     }
 
     $scope.deletePending = function (id) {
-        $scope.pendingRepo.get(id).then(function (doc) {
-            return $scope.pendingRepo.remove(doc);
-        }).then(function (res) {
+        Storage.deletePending(id).then(function (res) {
             for (var i = 0; i < $scope.pendings.length; i++) {
                 if ($scope.pendings[i]._id == id) {
                     $scope.pendings.splice(i, 1);
@@ -186,13 +178,13 @@ angular.module("metho.controller.projects.pending", [])
                                 if (res) {
                                     $scope.newsource.not_available = true;
                                     $scope.pendings[$scope.editingIndex].not_available = true;
-                                    $scope.pendingRepo.put($scope.pendings[$scope.editingIndex]);
+                                    Storage.setPendingFromId($scope.editingId, $scope.pendings[$scope.editingIndex]);
                                     $scope.openAtURL("http://google.ca/search?q=isbn+" + $scope.pendings[$scope.editingIndex].isbn);
                                 } else {
                                     $scope.newSourceModal.hide();
                                     $scope.newsource = {};
                                     $scope.pendings[$scope.editingIndex].not_available = true;
-                                    $scope.pendingRepo.put($scope.pendings[$scope.editingIndex]);
+                                    Storage.setPendingFromId($scope.editingId, $scope.pendings[$scope.editingIndex]);
                                     $scope.editingId = null;
                                     $scope.editingISBN = null;
                                     $scope.editingIndex = null;

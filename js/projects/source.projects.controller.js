@@ -1,10 +1,8 @@
 angular.module("metho.controller.projects.source", [])
 
-.controller('SourceDetailCtrl', function($scope, $stateParams, $translate, $ionicPopup, $ionicModal, ParseSource, ShareSource) {
+.controller('SourceDetailCtrl', function($scope, $stateParams, $translate, $ionicPopup, $ionicModal, ParseSource, ShareSource, Storage) {
     $scope.source = ShareSource.getSource();
     $scope.loading = false;
-    $scope.sourceRepo = new PouchDB("sources");
-    $scope.projectRepo = new PouchDB("projects");
 
     $ionicModal.fromTemplateUrl('templates/edit.source.modal.html', {
         scope: $scope,
@@ -40,12 +38,8 @@ angular.module("metho.controller.projects.source", [])
 
                         }
                         $scope.source = ParseSource.parseSource($scope.source);
-                        $scope.sourceRepo.put($scope.source, $scope.source._id, $scope.source._rev).then(function(response) {
-                            if (response.ok) {
-                                $scope.source._rev = response.rev;
-                            } else {
-                                console.log("not ok");
-                            }
+                        Storage.setSourceFromId($scope.source._id, $scope.source).then(function(response) {
+                            $scope.source._rev = response.rev;
                         }).catch(function(error) {
                             console.log(error);
                         });
@@ -62,12 +56,8 @@ angular.module("metho.controller.projects.source", [])
                     if (res != null) {
                         $scope.source[$scope.source.errors[id].var] = res;
                         $scope.source = ParseSource.parseSource($scope.source);
-                        $scope.sourceRepo.put($scope.source, $scope.source._id, $scope.source._rev).then(function(response) {
-                            if (response.ok) {
-                                $scope.source._rev = response.rev;
-                            } else {
-                                console.log("not ok");
-                            }
+                        Storage.setSourceFromId($scope.source._id, $scope.source).then(function(response) {
+                            $scope.source._rev = response.rev;
                         }).catch(function(error) {
                             console.log(error);
                         });
@@ -92,12 +82,8 @@ angular.module("metho.controller.projects.source", [])
                 if (res != null) {
                     $scope.source[$scope.source.warnings[id].var] = res;
                     $scope.source = ParseSource.parseSource($scope.source);
-                    $scope.sourceRepo.put($scope.source, $scope.source._id, $scope.source._rev).then(function(response) {
-                        if (response.ok) {
-                            $scope.source._rev = response.rev;
-                        } else {
-                            console.log("not ok");
-                        }
+                    Storage.setSourceFromId($scope.source._id, $scope.source).then(function(response) {
+                        $scope.source._rev = response.rev;
                     }).catch(function(error) {
                         console.log(error);
                     });
@@ -126,12 +112,8 @@ angular.module("metho.controller.projects.source", [])
         $scope.source = ParseSource.parseSource($scope.newsource);
         $scope.editSourceModal.hide();
         $scope.newsource = {};
-        $scope.sourceRepo.put($scope.source, $scope.source._id, $scope.source._rev).then(function(response) {
-            if (response.ok) {
-                $scope.source._rev = response.rev;
-            } else {
-                console.log("not ok");
-            }
+        Storage.setSourceFromId($scope.source._id, $scope.source).then(function(response) {
+            $scope.source._rev = response.rev;
         }).catch(function(error) {
             console.log(error);
         });
@@ -140,7 +122,7 @@ angular.module("metho.controller.projects.source", [])
     // Init if service is unavailable (debug when reloading the page)
     if ($scope.source == null) {
         $scope.loading = true;
-        $scope.sourceRepo.get($stateParams.sourceID).then(function(result) {
+        Storage.getSourceFromId($stateParams.sourceID).then(function(result) {
             $scope.source = result;
             $scope.loading = false;
         });
